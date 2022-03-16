@@ -46,4 +46,29 @@ public class DebitServiceController {
 			           HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong!",e);
 		}
     }
+	
+	/**
+	 * In case of failure scenario , debited amount will be rollbacked to maintain the DB consistent state
+	 * 
+	 * @param withdrawalModel
+	 * @return
+	 */
+	
+	@PostMapping(value = "accounts/withdrawrollback")
+    public ResponseEntity<ResponseModel> depositRollback(@RequestBody WithdrawalModel withdrawalModel)  {
+    	ResponseModel responseModel=new ResponseModel();
+    	Debit debit;
+		try {
+			debit = withdrawalService.doWithdrawalRollback(withdrawalModel);
+			responseModel.setData(debit);
+	    	responseModel.setMessage("Success");
+	    	
+	    	return new ResponseEntity<ResponseModel>(responseModel, HttpStatus.OK);
+		}
+		catch (Exception e) {
+			throw new ResponseStatusException(
+			           HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong!",e);
+		}
+    }
+	
 }
