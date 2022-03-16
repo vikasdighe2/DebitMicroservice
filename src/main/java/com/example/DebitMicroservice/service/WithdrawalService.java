@@ -42,6 +42,20 @@ public class WithdrawalService {
         accountRepository.save(account);
         
 		return updateTransactionTable(withdrawalModel);
+	
+	}
+	
+	public Debit doWithdrawalRollback(WithdrawalModel withdrawalModel) throws NoSuchAccountException {
+		Optional<Account> optionalBankAccount = accountRepository.findById(withdrawalModel.getDestinationAccountNumber());
+        if(!optionalBankAccount.isPresent()){
+            throw new NoSuchAccountException(": "+ withdrawalModel.getDestinationAccountNumber());
+        }
+        Account account = optionalBankAccount.get();
+        account.setBalance(account.getBalance() + withdrawalModel.getAmount());
+        //account.setTransactionDate(Instant.now());
+        accountRepository.save(account);
+        
+		return updateTransactionTable(withdrawalModel);
 
 		
 	}
