@@ -13,6 +13,7 @@ import com.example.DebitMicroservice.model.Debit;
 import com.example.DebitMicroservice.model.WithdrawalModel;
 import com.example.DebitMicroservice.repository.AccountRepository;
 import com.example.DebitMicroservice.repository.DebitRepository;
+import com.example.DebitMicroservice.utils.InsufficientAccountBalance;
 import com.example.DebitMicroservice.utils.NoSuchAccountException;
 
 
@@ -31,15 +32,18 @@ public class WithdrawalService {
 		this.debitRepository = debitRepository;
     }
 
-	public Debit doWithdrawal(WithdrawalModel withdrawalModel) throws NoSuchAccountException {
+	public Debit doWithdrawal(WithdrawalModel withdrawalModel) throws NoSuchAccountException,InsufficientAccountBalance {
 		Optional<Account> optionalBankAccount = accountRepository.findById(withdrawalModel.getDestinationAccountNumber());
         if(!optionalBankAccount.isPresent()){
             throw new NoSuchAccountException(": "+ withdrawalModel.getDestinationAccountNumber());
         }
         Account account = optionalBankAccount.get();
+        if(account.getBalance()>=withdrawalModel.getAmount()) {
         account.setBalance(account.getBalance() - withdrawalModel.getAmount());
-        //account.setTransactionDate(Instant.now());
         accountRepository.save(account);
+        }else {
+        	throw new InsufficientAccountBalance(": "+ withdrawalModel.getDestinationAccountNumber());
+        }
         
 		return updateTransactionTable(withdrawalModel);
 	
@@ -52,7 +56,6 @@ public class WithdrawalService {
         }
         Account account = optionalBankAccount.get();
         account.setBalance(account.getBalance() + withdrawalModel.getAmount());
-        //account.setTransactionDate(Instant.now());
         accountRepository.save(account);
         
 		return updateTransactionTable(withdrawalModel);
